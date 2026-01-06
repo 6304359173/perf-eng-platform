@@ -18,15 +18,15 @@ WHERE time > now() - 15m
 result = list(client.query(query).get_points())
 
 if not result or result[0].get("p95") is None:
-    print("❌ No SLA data found in InfluxDB")
+    print("No SLA data found in InfluxDB")
     sys.exit(1)
 
 p95 = result[0]["p95"]
-print(f"📊 P95 Response Time = {p95} ms")
+print(f"P95 Response Time = {p95} ms")
 
 if p95 > P95_LIMIT_MS:
-    print("❌ SLA FAILED (P95 breached)")
+    print("SLA FAILED")
     sys.exit(1)
 
-print("✅ SLA PASSED")
+print("SLA PASSED")
 sys.exit(0)
