@@ -1,0 +1,52 @@
+pipeline {
+    agent any
+
+    environment {
+        PYTHON = "C:\\Python310\\python.exe"
+        INFLUX = "http://127.0.0.1:8086"
+    }
+
+    stages {
+
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('k6 Smoke Test') {
+            steps {
+                bat '''
+                k6 run --out influxdb=%INFLUX%/k6 k6\\hotel_smoke_test.js
+                '''
+            }
+        }
+
+        stage('JMeter Load Test') {
+            steps {
+                bat '''
+                jmeter -n ^
+                -t jmeter\\hotel_load_test.jmx ^
+                -l results.jtl
+                '''
+            }
+        }
+
+        stage('SLA Validation') {
+            steps {
+                bat '''
+                %PYTHON% python\\sla_validator.py
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Performance Pipeline PASSED'
+        }
+        failure {
+            echo '❌ Performance Pipeline FAILED (SLA breached)'
+        }
+    }
+}
